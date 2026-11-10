@@ -1,34 +1,49 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './index.css';
 
-// ডেমো ডাটা সেট
-const INITIAL_DEMO_MEMBERS = [
-  { id: 1, name: 'রকিবুল ইসলাম', bazarCost: 4500, riceCost: 650, totalMeal: 45, roomRent: 3500 },
-  { id: 2, name: 'তানভীর আহমেদ', bazarCost: 3200, riceCost: 650, totalMeal: 40, roomRent: 3500 },
-  { id: 3, name: 'মাহমুদ হাসান', bazarCost: 1500, riceCost: 650, totalMeal: 38, roomRent: 3500 },
-  { id: 4, name: 'সাকিব আল হাসান', bazarCost: 6000, riceCost: 650, totalMeal: 50, roomRent: 3500 },
-  { id: 5, name: 'আরিফুল ইসলাম', bazarCost: 2000, riceCost: 650, totalMeal: 35, roomRent: 3500 },
-];
-
-const INITIAL_DEMO_UTILITY = {
-  gasBill: 1200,
-  electricityBill: 1850,
-  liftBill: 600,
-  wifiBill: 800,
-  khalaBill: 2500,
-  garbageBill: 150,
+const DEFAULT_UTILITY = {
+  gasBill: 0,
+  electricityBill: 0,
+  liftBill: 0,
+  wifiBill: 0,
+  khalaBill: 0,
+  garbageBill: 0,
 };
 
 function App() {
   // মেম্বার তালিকা ও ইউটিলিটি স্টেট (লোকাল স্টোরেজ থেকে রিড)
   const [members, setMembers] = useState(() => {
-    const saved = localStorage.getItem('smart_mess_members');
-    return saved ? JSON.parse(saved) : INITIAL_DEMO_MEMBERS;
+    try {
+      const saved = localStorage.getItem('smart_mess_members');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // আগের কোনো ডেমো মেম্বার সংরক্ষিত থাকলে তা স্বয়ংক্রিয়ভাবে মুছে ফেলা
+        const hasDemoNames = parsed.some((m) =>
+          ['রকিবুল ইসলাম', 'তানভীর আহমেদ', 'মাহমুদ হাসান', 'সাকিব আল হাসান', 'আরিফুল ইসলাম'].includes(m.name)
+        );
+        if (!hasDemoNames) return parsed;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    return [];
   });
 
   const [utility, setUtility] = useState(() => {
-    const saved = localStorage.getItem('smart_mess_utility');
-    return saved ? JSON.parse(saved) : INITIAL_DEMO_UTILITY;
+    try {
+      const saved = localStorage.getItem('smart_mess_utility');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // ডেমো ইউটিলিটি বিল চেক
+        if (parsed.gasBill === 1200 && parsed.electricityBill === 1850) {
+          return DEFAULT_UTILITY;
+        }
+        return parsed;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    return DEFAULT_UTILITY;
   });
 
   // থিম স্টেট (ডার্ক / লাইট)
@@ -182,12 +197,6 @@ function App() {
     }
   };
 
-  // ডেমো ডাটা লোড
-  const handleLoadDemo = () => {
-    setMembers(INITIAL_DEMO_MEMBERS);
-    setUtility(INITIAL_DEMO_UTILITY);
-    showToast('✨ ডেমো ডাটা লোড সম্পন্ন হয়েছে');
-  };
 
   // সামগ্রিক গণনা
   const totalMembers = members.length;
@@ -298,9 +307,6 @@ ${statusText} (প্রকৃত: ৳ ${m.rawFinancialPosition.toFixed(2)})
         </div>
 
         <div className="nav-actions no-print">
-          <button onClick={handleLoadDemo} className="btn-secondary" title="ডেমো ডাটা লোড করুন">
-            ✨ ডেমো ডাটা
-          </button>
           <button onClick={() => window.print()} className="btn-secondary" title="প্রিন্ট বা PDF হিসেবে সেভ">
             🖨️ প্রিন্ট / PDF
           </button>
@@ -582,7 +588,7 @@ ${statusText} (প্রকৃত: ৳ ${m.rawFinancialPosition.toFixed(2)})
             <div className="empty-state">
               <div className="empty-icon">📂</div>
               <h3>কোনো মেম্বার যুক্ত করা হয়নি</h3>
-              <p>উপরে ফর্ম থেকে নতুন মেম্বার যোগ করুন অথবা "✨ ডেমো ডাটা" বাটনে ক্লিক করুন।</p>
+              <p>১ নম্বর ফর্ম থেকে মেম্বারের নাম, বাজার খরচ ও মিল সংখ্যা দিয়ে যুক্ত করুন।</p>
             </div>
           ) : activeTab === 'table' ? (
             <div className="table-responsive">
